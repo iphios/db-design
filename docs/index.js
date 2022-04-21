@@ -8,7 +8,7 @@
       const tfoot = [];
 
       thead.push(`
-        <tr class="caption">
+        <tr class="caption ${data.color === '#dadada' ? '' : 'colored'}" style="background-color: ${data.color};">
           <th class="table-name" colspan="3">
             ${data.name}
           </th>
@@ -121,7 +121,7 @@
           const obj = {
             id: tableId,
             name: name,
-            color: '#ffffff',
+            color: '#dadada',
             position: {
               left: left,
               top: top
@@ -136,7 +136,7 @@
     static deleteTable(id) {
       const idx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === id);
       if (idx !== -1) {
-        $(`[data-id="${id}"]`).remove();
+        $(`table[data-id="${id}"]`).remove();
         DbDesign.currentSchemaObj.tables.splice(idx, 1);
       }
     }
@@ -253,7 +253,7 @@
             ${!isTable && isCurrentSchemaPresent ? '<li class="menu-item" data-value="export_schema">Export Schema</li>' : ''}
             ${isTable ? `
               <li class="menu-item-separator">&nbsp;</li>
-              <li class="menu-item-action menu-item-action-color">
+              <li class="menu-item-action menu-item-action-color" data-id="${tableId}">
                 <span title="maroon" class="table-color table-color-maroon" data-color="#800040"></span>
                 <span title="ocean" class="table-color table-color-ocean" data-color="#004080"></span>
                 <span title="teal" class="table-color table-color-teal" data-color="#008080"></span>
@@ -266,7 +266,7 @@
             		<span title="green" class="table-color table-color-green" data-color="#008000"></span>
             		<span title="orange" class="table-color table-color-orange" data-color="#ff8000"></span>
             		<span title="purple" class="table-color table-color-purple" data-color="#7f007f"></span>
-            		<span title="white" class="table-color table-color-white" data-color="#fffff"></span>
+            		<span title="reset" class="table-color table-color-reset" data-color="#dadada"></span>
               </li>
               ` : ''}
             <li class="menu-item-separator">&nbsp;</li>
@@ -368,6 +368,19 @@
           } else if (value == 'full_screen') {
             Controller.fullScreen();
           }
+        },
+        colorChangeHandler: function(event) {
+          const $el = $(event.target);
+          const id = $el.parent().data('id');
+          const color = $el.data('color');
+          $(`table[data-id="${id}"]`)
+            .find('tr.caption')[color === '#dadada' ? 'removeClass' : 'addClass']('colored')
+            .css('background-color', color);
+          const idx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === id);
+          if (idx !== -1) {
+            DbDesign.currentSchemaObj.tables[idx].color = color;
+          }
+          $('ul.context-menu').removeClass('show');
         }
       };
       window.addEventListener('resize', windowResizeHandler);
@@ -385,6 +398,7 @@
       $('ul.context-menu').on({
         click: contextMenu.clickHandler
       }, 'li');
+      $('ul.context-menu').on('click', '.table-color', contextMenu.colorChangeHandler);
     }
     static async initIdb() {
       let isSuccess = true;

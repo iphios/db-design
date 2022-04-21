@@ -133,8 +133,8 @@ ul.context-menu span.table-color.table-color-purple {
   background-color: #7f007f;
 }
 
-ul.context-menu span.table-color.table-color-white {
-  background-color: #ffffff;
+ul.context-menu span.table-color.table-color-reset {
+  background-color: #fff;
 }
 
 ul.context-menu span.table-color.table-color-maroon {
@@ -184,7 +184,6 @@ ul.context-menu li label>input[type="radio"] {
 .entity-table thead tr.caption {
   font-weight: bold;
   text-align: left;
-  background-color: #dadada;
   cursor: move;
   user-select: none;
   color: #333;

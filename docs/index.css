@@ -44,8 +44,19 @@ div.canvas-container {
 canvas#graph {
   margin: 0px;
   padding: 0px;
-  cursor: hand;
-  background-image: url('./graph.png');
+}
+
+.toolbar {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  padding: 5px 10px;
+  width: fit-content;
+  font-family: 'source_sans_proregular', sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #222;
+  text-transform: uppercase;
 }
 
 ul.context-menu {
@@ -89,7 +100,151 @@ ul.context-menu li.menu-item-separator {
   height: 0px;
 }
 
+ul.context-menu li.menu-item-action-color {
+  padding: 3px 12.5px 0px;
+}
+
+ul.context-menu li.menu-item-action-color span.table-color {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
+  cursor: pointer;
+}
+
+ul.context-menu span.table-color.table-color-red {
+  background-color: #cc3333;
+}
+
+ul.context-menu span.table-color.table-color-blue {
+  background-color: #1586d6;
+}
+
+ul.context-menu span.table-color.table-color-green {
+  background-color: #008000;
+}
+
+ul.context-menu span.table-color.table-color-orange {
+  background-color: #ff8000;
+}
+
+ul.context-menu span.table-color.table-color-purple {
+  background-color: #7f007f;
+}
+
+ul.context-menu span.table-color.table-color-white {
+  background-color: #ffffff;
+}
+
+ul.context-menu span.table-color.table-color-maroon {
+  background-color: #800040;
+}
+
+ul.context-menu span.table-color.table-color-ocean {
+  background-color: #004080;
+}
+
+ul.context-menu span.table-color.table-color-teal {
+  background-color: #008080;
+}
+
+ul.context-menu span.table-color.table-color-asparagus {
+  background-color: #808000;
+}
+
+ul.context-menu span.table-color.table-color-strawberry {
+  background-color: #ff0080;
+}
+
+ul.context-menu span.table-color.table-color-iron {
+  background-color: #505050;
+}
+
 ul.context-menu li label>input[type="radio"] {
   position: relative;
   top: 2px;
+}
+
+.entity-table {
+  position: absolute;
+  z-index: 5;
+  font-family: 'source_sans_proregular', sans-serif;
+  font-size: 13px;
+  background-color: #eee;
+  min-width: 200px;
+  border-top: 1px solid #444;
+  border-left: 1px solid #444;
+  border-right: 1px solid #444;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 2px 2px 12px rgb(0 0 0 / 50%);
+}
+
+.entity-table thead tr.caption {
+  font-weight: bold;
+  text-align: left;
+  background-color: #dadada;
+  cursor: move;
+  user-select: none;
+  color: #333;
+}
+
+.entity-table thead tr.caption th.table-name {
+  direction: ltr;
+  text-align: left;
+}
+
+.entity-table thead tr.caption th.table-ops {
+  width: 36px;
+  text-align: right;
+}
+
+.entity-table thead tr.caption th.table-ops img.edit-table {
+  cursor: default;
+  vertical-align: middle;
+}
+
+.entity-table thead tr.caption.colored {
+  color: #f7f7f7
+}
+
+.entity-table thead tr th {
+  border-bottom: 1px solid #000;
+  padding: 2px;
+  text-align: left
+}
+
+.entity-table td {
+  border-bottom: 1px solid #000;
+  border-right: 1px solid #000;
+  background-color: #f8f8f8;
+  padding: 1px;
+  padding-left: 3px;
+  white-space: nowrap;
+  vertical-align: middle
+}
+
+.entity-table tbody td img.mover {
+  cursor: ns-resize;
+}
+
+.entity-table tfoot tr td.action {
+  padding: 0px;
+  border-right-width: 0px;
+}
+
+.entity-table tfoot tr td.action {
+  padding: 3px;
+}
+
+.entity-table tfoot tr td.action img {
+  vertical-align: top;
+}
+
+.entity-table tfoot tr td.action span {
+  color: #336699;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-right: 5px;
 }

@@ -29,6 +29,7 @@ body {
   width: 100vw;
   height: 100vh;
   display: none;
+  cursor: default;
 }
 
 body.show {
@@ -36,8 +37,7 @@ body.show {
 }
 
 div.canvas-container {
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
   overflow: scroll;
 }
 

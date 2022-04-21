@@ -59,8 +59,18 @@
         `);
         $('.canvas-container').find(`[data-id="${data.id}"]`).draggable({
           handle: 'tr.caption',
-          scroll: true,
-          opacity: .8
+          scroll: false,
+          opacity: .8,
+          stop: function(event, _ui) {
+            const $el = $(event.target);
+            const id = $el.data('id');
+            const data = DbDesign.currentSchemaObj.tables.find(each => each.id === id);
+            if (data) {
+              const cssValue = $el.css(['left', 'top']);
+              data.position.left = parseInt(cssValue.left);
+              data.position.top = parseInt(cssValue.top);
+            }
+          }
         });
       }
     }
@@ -92,8 +102,16 @@
         }
       }, 0);
     }
-    static saveSchema() {
+    static async saveSchema() {
+      const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
+      const store = tx.objectStore('schemas');
+      await store.put(DbDesign.currentSchemaObj);
+      await tx.done;
 
+      $.notify('Schema saved', {
+        globalPosition: 'top center',
+        className: 'success'
+      });
     }
     static newTable(left, top) {
       setTimeout(async function() {
@@ -114,6 +132,13 @@
           Table.renderHtml(obj);
         }
       }, 0);
+    }
+    static deleteTable(id) {
+      const idx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === id);
+      if (idx !== -1) {
+        $(`[data-id="${id}"]`).remove();
+        DbDesign.currentSchemaObj.tables.splice(idx, 1);
+      }
     }
   };
 
@@ -169,6 +194,9 @@
 
       DbDesign.currentSchemaObj = obj;
       $('.toolbar').text(obj.name);
+      DbDesign.currentSchemaObj.tables.forEach(table => {
+        Table.renderHtml(table);
+      });
     }
     static async getAllSchemas() {
       const tx = window.idb.dbdesign.transaction(['schemas'], 'readonly');
@@ -196,14 +224,24 @@
       newImage.src = 'https://raw.githubusercontent.com/sai5171/db-design/main/docs/graph.png';
     }
     static initEvents() {
+      const windowResizeHandler = function() {
+        $('.canvas-container').css({
+          'width': `${window.innerWidth}px`,
+          'height': `${window.innerHeight}px`
+        })
+      };
       const windowDocument = {
         contextmenuHandler: async function(event) {
           const $el = $(event.target);
           const isTable = $el.hasClass('.entity-table') || $el.parents('.entity-table').length;
+          let tableId = null;
+          if (isTable) {
+            tableId = $el.data('id') || $el.parents('.entity-table').data('id');
+          }
           const isCurrentSchemaPresent = DbDesign.currentSchemaObj !== null;
 
           $('ul.context-menu').html(`
-            ${isTable ? '<li class="menu-item" data-value="delete_table">Delete Table</li>' : ''}
+            ${isTable ? `<li class="menu-item" data-value="delete_table" data-id="${tableId}">Delete Table</li>` : ''}
             ${!isTable && isCurrentSchemaPresent ? `
               <li class="menu-item" data-value="new_table">New Table</li>
               <li class="menu-item" data-value="save_schema">Save Schema</li>
@@ -263,12 +301,16 @@
           }
         },
         keyHandler: function() {
-          const keyMap = {};
+          let keyMap = {};
           return function(event) {
             if (event.repeat) return;
             keyMap[event.key] = event.type === 'keydown';
             if (keyMap['Escape'] == true) {
+              keyMap = {};
               $('ul.context-menu').removeClass('show');
+            } else if (keyMap['Alt'] == true && (keyMap['s'] == true || keyMap['S'] == true)) {
+              keyMap = {};
+              Controller.saveSchema();
             }
           };
         }
@@ -297,10 +339,6 @@
           }
         },
         mousedownHandler: function(event) {
-          if (document.body.style.cursor == '') {
-            document.body.style.cursor = 'grabbing';
-          }
-
           if (event.target.id == 'graph') {
             canvasContainer.isMouseDown = true;
             canvasContainer.left = event.pageX;
@@ -308,14 +346,11 @@
           }
         },
         mouseupHandler: function() {
-          if (document.body.style.cursor == 'grabbing') {
-            document.body.style.cursor = '';
-          }
           canvasContainer.isMouseDown = false;
         }
       };
       const contextMenu = {
-        clickHandler: function() {
+        clickHandler: function(event) {
 
           const $this = $(this);
           const value = $this.data('value');
@@ -324,6 +359,8 @@
           }
           if (value === 'new_table') {
             Controller.newTable(event.pageX, event.pageY);
+          } else if (value == 'delete_table') {
+            Controller.deleteTable($this.data('id'));
           } else if (value == 'new_schema') {
             Controller.newSchema();
           } else if (value == 'save_schema') {
@@ -333,6 +370,7 @@
           }
         }
       };
+      window.addEventListener('resize', windowResizeHandler);
       $(window.document).on({
         contextmenu: windowDocument.contextmenuHandler,
         click: windowDocument.clickHandler,
@@ -398,6 +436,7 @@
       const schemas = await store.getAll();
       await tx.done;
 
+      window.dispatchEvent(new Event('resize'));
       const latestSchema = schemas.sort((a, b) => a.updated_at < b.updated_at ? 1 : -1)[0];
       if (latestSchema !== undefined) {
         await DbDesign.loadSchema(latestSchema.id);

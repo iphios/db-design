@@ -46,19 +46,6 @@ canvas#graph {
   padding: 0px;
 }
 
-.toolbar {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  padding: 5px 10px;
-  width: fit-content;
-  font-family: 'source_sans_proregular', sans-serif;
-  font-size: 13px;
-  font-weight: bold;
-  color: #222;
-  text-transform: uppercase;
-}
-
 ul.context-menu {
   display: none;
   position: absolute;

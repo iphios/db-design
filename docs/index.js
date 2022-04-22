@@ -140,6 +140,9 @@
         DbDesign.currentSchemaObj.tables.splice(idx, 1);
       }
     }
+    static genImage() {
+
+    }
   };
 
   const DbDesign = class {
@@ -193,7 +196,12 @@
       await tx.done;
 
       DbDesign.currentSchemaObj = obj;
-      $('.toolbar').text(obj.name);
+      const canvas = window.document.getElementById('graph');
+      const context = canvas.getContext('2d');
+      context.font = '20px Arial, sans-serif';
+      context.fillStyle = '#888';
+      context.fillText(obj.name, 30, 40);
+      $('table[data-id]').remove();
       DbDesign.currentSchemaObj.tables.forEach(table => {
         Table.renderHtml(table);
       });
@@ -205,8 +213,8 @@
       await tx.done;
       return allSchemas;
     }
-    static initCanvas() {
-      const canvas = document.getElementById('graph');
+    static initCanvas(cbk) {
+      const canvas = window.document.getElementById('graph');
       const context = canvas.getContext('2d');
 
       const newImage = new Image();
@@ -220,6 +228,7 @@
             context.drawImage(newImage, w, h);
           }
         }
+        cbk();
       });
       newImage.src = 'https://raw.githubusercontent.com/sai5171/db-design/main/docs/graph.png';
     }
@@ -240,7 +249,7 @@
           }
           const isCurrentSchemaPresent = DbDesign.currentSchemaObj !== null;
 
-          $('ul.context-menu').html(`
+          $('ul.context-menu.main').html(`
             ${isTable ? `<li class="menu-item" data-value="delete_table" data-id="${tableId}">Delete Table</li>` : ''}
             ${!isTable && isCurrentSchemaPresent ? `
               <li class="menu-item" data-value="new_table">New Table</li>
@@ -284,20 +293,20 @@
           `);
 
           const contextMenuDimensions = {
-            width: $('ul.context-menu').outerWidth(),
-            heigth: $('ul.context-menu').outerHeight()
+            width: $('ul.context-menu.main').outerWidth(),
+            heigth: $('ul.context-menu.main').outerHeight()
           };
           const bufferSpace = 25;
           const contextMenupoint = {
             left: (event.pageX + contextMenuDimensions.width + bufferSpace) < window.innerWidth ? event.pageX : event.pageX - contextMenuDimensions.width,
             top: (event.pageY + contextMenuDimensions.heigth + bufferSpace) < window.innerHeight ? event.pageY : event.pageY - contextMenuDimensions.heigth
           };
-          $('ul.context-menu').css(contextMenupoint).addClass('show');
+          $('ul.context-menu.main').css(contextMenupoint).addClass('show');
         },
         clickHandler: function(event) {
           const $el = $(event.target);
           if (!$el.hasClass('menu-item-action') && !$el.parents('.menu-item-action').length) {
-            $('ul.context-menu').removeClass('show');
+            $('ul.context-menu.main').removeClass('show');
           }
         },
         keyHandler: function() {
@@ -307,7 +316,7 @@
             keyMap[event.key] = event.type === 'keydown';
             if (keyMap['Escape'] == true) {
               keyMap = {};
-              $('ul.context-menu').removeClass('show');
+              $('ul.context-menu.main').removeClass('show');
             } else if (keyMap['Alt'] == true && (keyMap['s'] == true || keyMap['S'] == true)) {
               keyMap = {};
               Controller.saveSchema();
@@ -355,18 +364,20 @@
           const $this = $(this);
           const value = $this.data('value');
           if (['new_table', 'new_schema', 'full_screen'].includes(value)) {
-            $('ul.context-menu').removeClass('show');
+            $('ul.context-menu.main').removeClass('show');
           }
           if (value === 'new_table') {
             Controller.newTable(event.pageX, event.pageY);
-          } else if (value == 'delete_table') {
+          } else if (value === 'delete_table') {
             Controller.deleteTable($this.data('id'));
-          } else if (value == 'new_schema') {
+          } else if (value === 'new_schema') {
             Controller.newSchema();
-          } else if (value == 'save_schema') {
+          } else if (value === 'save_schema') {
             Controller.saveSchema();
           } else if (value == 'full_screen') {
             Controller.fullScreen();
+          } else if (value === 'gen_image') {
+            Controller.genImage();
           }
         },
         colorChangeHandler: function(event) {
@@ -380,7 +391,7 @@
           if (idx !== -1) {
             DbDesign.currentSchemaObj.tables[idx].color = color;
           }
-          $('ul.context-menu').removeClass('show');
+          $('ul.context-menu.main').removeClass('show');
         }
       };
       window.addEventListener('resize', windowResizeHandler);
@@ -395,10 +406,10 @@
         mousedown: canvasContainer.mousedownHandler,
         mouseup: canvasContainer.mouseupHandler
       });
-      $('ul.context-menu').on({
+      $('ul.context-menu.main').on({
         click: contextMenu.clickHandler
       }, 'li');
-      $('ul.context-menu').on('click', '.table-color', contextMenu.colorChangeHandler);
+      $('ul.context-menu.main').on('click', '.table-color', contextMenu.colorChangeHandler);
     }
     static async initIdb() {
       let isSuccess = true;
@@ -440,22 +451,36 @@
         }
       }
     }
-    static async init() {
-      DbDesign.initCanvas();
-      DbDesign.initEvents();
-      await DbDesign.initIdb();
+    static protos() {
+      /**
+       * @prototype
+       * @desc custom async for each function.
+       * @param {Function} cbk callback function for async forEach.
+       */
+      Object.defineProperty(Array.prototype, 'asyncforEach', {
+        value: async function(cbk) {
+          for (let i = 0; i < this.length; i++) await cbk(this[i], i, this);
+        }
+      });
+    }
+    static init() {
+      DbDesign.initCanvas(async function () {
+        DbDesign.initEvents();
+        DbDesign.protos();
+        await DbDesign.initIdb();
 
-      const tx = window.idb.dbdesign.transaction(['schemas'], 'readonly');
-      const store = tx.objectStore('schemas');
-      const schemas = await store.getAll();
-      await tx.done;
+        const tx = window.idb.dbdesign.transaction(['schemas'], 'readonly');
+        const store = tx.objectStore('schemas');
+        const schemas = await store.getAll();
+        await tx.done;
 
-      window.dispatchEvent(new Event('resize'));
-      const latestSchema = schemas.sort((a, b) => a.updated_at < b.updated_at ? 1 : -1)[0];
-      if (latestSchema !== undefined) {
-        await DbDesign.loadSchema(latestSchema.id);
-      }
-      $('body').addClass('show');
+        window.dispatchEvent(new Event('resize'));
+        const latestSchema = schemas.sort((a, b) => a.updated_at < b.updated_at ? 1 : -1)[0];
+        if (latestSchema !== undefined) {
+          await DbDesign.loadSchema(latestSchema.id);
+        }
+        $('body').addClass('show');
+      });
     }
   };
 

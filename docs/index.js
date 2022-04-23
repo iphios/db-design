@@ -17,7 +17,7 @@
           </th>
         </tr>
       `);
-      data.columns.forEach(field => {
+      data.columns.sort((a, b) => a.position < b.position ? -1 : 1).forEach(field => {
         tbody.push(`
           <tr data-id="${field.id}" class="show">
             <td>
@@ -236,7 +236,28 @@
           }
         });
       }
+      $(`table[data-id="${data.id}"] tbody`).sortable({
+        update: function(_event, _ui) {
+          const tid = $(event.target).closest('table').data('id');
+          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
+          if (tidx) {
+            $(`table[data-id="${tid}"] tbody tr[data-id]`).each(function(index, el) {
+              const fid = $(el).data('id');
+              const fidx = DbDesign.currentSchemaObj.tables[tidx].columns.findIndex(each => each.id == fid);
+              if (fidx) {
+                DbDesign.currentSchemaObj.tables[tidx].columns[fidx].position = index + 1;
+              }
+            });
+          }
+
+          Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+        }
+      });
       $('.canvas-container').find('[name="name"]').trigger('input');
+      Table.drawLines();
+    }
+    static drawLines() {
+
     }
     static fieldConditionRender(event) {
 

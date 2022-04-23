@@ -24,6 +24,7 @@
               ${field.index === 'primary_0' && field.ai === false ? '<img crossorigin="anonymous" src="./key.png" />' : ''}
               ${field.index === 'primary_0' && field.ai === true ? '<img crossorigin="anonymous" src="./key_ai.png" />' : ''}
               ${field.index !== 'primary_0' && field.ai === true ? '<img crossorigin="anonymous" src="./ai.png" />' : ''}
+              ${field.null === false ? '<img crossorigin="anonymous" src="./not_null.png" />' : ''}
             </td>
             <td>${field.name}</td>
             <td>${field.type}${field.size.length ? `(${field.size})` : ''}</td>

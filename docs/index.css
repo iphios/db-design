@@ -100,51 +100,51 @@ ul.context-menu li.menu-item-action-color span.table-color {
   cursor: pointer;
 }
 
-ul.context-menu span.table-color.table-color-red {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-red {
   background-color: #cc3333;
 }
 
-ul.context-menu span.table-color.table-color-blue {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-blue {
   background-color: #1586d6;
 }
 
-ul.context-menu span.table-color.table-color-green {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-green {
   background-color: #008000;
 }
 
-ul.context-menu span.table-color.table-color-orange {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-orange {
   background-color: #ff8000;
 }
 
-ul.context-menu span.table-color.table-color-purple {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-purple {
   background-color: #7f007f;
 }
 
-ul.context-menu span.table-color.table-color-reset {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-reset {
   background-color: #fff;
 }
 
-ul.context-menu span.table-color.table-color-maroon {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-maroon {
   background-color: #800040;
 }
 
-ul.context-menu span.table-color.table-color-ocean {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-ocean {
   background-color: #004080;
 }
 
-ul.context-menu span.table-color.table-color-teal {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-teal {
   background-color: #008080;
 }
 
-ul.context-menu span.table-color.table-color-asparagus {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-asparagus {
   background-color: #808000;
 }
 
-ul.context-menu span.table-color.table-color-strawberry {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-strawberry {
   background-color: #ff0080;
 }
 
-ul.context-menu span.table-color.table-color-iron {
+ul.context-menu li.menu-item-action-color span.table-color.table-color-iron {
   background-color: #505050;
 }
 
@@ -176,6 +176,15 @@ ul.context-menu li label>input[type="radio"] {
   color: #333;
 }
 
+.entity-table thead tr.caption.colored {
+  color: #f7f7f7
+}
+
+.entity-table thead tr th {
+  border-bottom: 1px solid #000;
+  padding: 2px;
+}
+
 .entity-table thead tr.caption th.table-name {
   direction: ltr;
   text-align: left;
@@ -191,22 +200,19 @@ ul.context-menu li label>input[type="radio"] {
   vertical-align: middle;
 }
 
-.entity-table thead tr.caption.colored {
-  color: #f7f7f7
+.entity-table tr[data-id] {
+  display: none;
 }
 
-.entity-table thead tr th {
-  border-bottom: 1px solid #000;
-  padding: 2px;
-  text-align: left
+.entity-table tr[data-id].show {
+  display: table-row;
 }
 
 .entity-table td {
   border-bottom: 1px solid #000;
   border-right: 1px solid #000;
   background-color: #f8f8f8;
-  padding: 1px;
-  padding-left: 3px;
+  padding: 3px;
   white-space: nowrap;
   vertical-align: middle
 }
@@ -215,7 +221,7 @@ ul.context-menu li label>input[type="radio"] {
   cursor: ns-resize;
 }
 
-.entity-table tfoot tr td.action {
+.entity-table tr td:last-child {
   padding: 0px;
   border-right-width: 0px;
 }
@@ -224,13 +230,69 @@ ul.context-menu li label>input[type="radio"] {
   padding: 3px;
 }
 
-.entity-table tfoot tr td.action img {
+.entity-table img {
   vertical-align: top;
 }
 
-.entity-table tfoot tr td.action span {
+.entity-table span.link {
   color: #336699;
   text-decoration: underline;
   cursor: pointer;
   margin-right: 5px;
+}
+
+.entity-table tr.add-field-button {
+  display: none;
+}
+
+.entity-table tr.add-field-button.show {
+  display: table-row;
+}
+
+.entity-table tr.field-form {
+  display: none;
+}
+
+.entity-table tr.field-form.show {
+  display: table-row;
+}
+
+.entity-table tr.field-form td form {
+  margin: 10px 5px;
+  width: 250px;
+}
+
+.entity-table tr.field-form td div.field.hide {
+  display: none;
+}
+
+.entity-table tr.field-form td div.field {
+  display: flex;
+  justify-content: space-between;
+  padding: 2.5px;
+}
+
+.entity-table tr.field-form td div.field label {
+  padding-left: 10px;
+}
+
+.entity-table tr.field-form td div.field-buttons {
+  padding-top: 10px;
+}
+
+input[type=text] {
+  border: 1px solid #aaa;
+  width: 130px;
+}
+
+select {
+  border: 1px solid #aaa;
+  width: 135px;
+}
+
+input[type=text]:focus,
+input[type=text]:active,
+select {
+  border: 1px solid #555;
+  outline: none;
 }

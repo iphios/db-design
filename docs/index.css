@@ -217,7 +217,11 @@ ul.context-menu li label>input[type="radio"] {
   vertical-align: middle
 }
 
-.entity-table tbody td img.mover {
+.entity-table tbody td.img {
+  width: 32px;
+}
+
+.entity-table tbody td img.order-field:hover {
   cursor: ns-resize;
 }
 

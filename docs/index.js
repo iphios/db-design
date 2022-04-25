@@ -356,9 +356,14 @@
 
       context.beginPath();
       context.moveTo(left1, top1);
-      context.bezierCurveTo(left2, top2, left3, top3, left4, top4);
-      context.fillStyle = context.strokeStyle = color;
-      context.lineWidth = 1;
+      if (DbDesign.getCurrentLineType() === 'bezier') {
+        context.bezierCurveTo(left2, top2, left3, top3, left4, top4);
+        context.fillStyle = context.strokeStyle = color;
+      } else {
+        context.lineTo(left2, top2);
+        context.lineTo(left3, top3);
+        context.lineTo(left4, top4);
+      }
       context.stroke();
 
       context.beginPath();
@@ -871,7 +876,7 @@
             <li class="menu-item-separator">&nbsp;</li>
             <li class="menu-item-action menu-item-action-line-type">
               <label><input type="radio" name="line_type" value="bezier" ${DbDesign.getCurrentLineType() == 'bezier' ? 'checked' : ''} /><span>Bezier</span></label>
-              <label><input type="radio" name="line_type" value="cornered" ${DbDesign.getCurrentLineType() == 'corners' ? 'checked' : ''} /><span>Corners</span></label>
+              <label><input type="radio" name="line_type" value="corners" ${DbDesign.getCurrentLineType() == 'corners' ? 'checked' : ''} /><span>Corners</span></label>
               <span>&nbsp;</span>
             </li>
           `);
@@ -981,6 +986,11 @@
             Controller.genImage();
           }
         },
+        lineTypeHandler: function() {
+          window.localStorage.line_type = $(this).val();
+          $('ul.context-menu').removeClass('show');
+          Table.drawLines();
+        },
         colorChangeHandler: function(event) {
           const $el = $(event.target);
           const id = $el.parents('ul').data('id');
@@ -1029,6 +1039,7 @@
       $('ul.context-menu.main').on({
         click: contextMenu.clickHandler
       }, 'li');
+      $('ul.context-menu.main').on('change', 'input[type="radio"]', contextMenu.lineTypeHandler);
       $('ul.context-menu.main').on('click', '.table-color', contextMenu.colorChangeHandler);
       $('ul.context-menu.sub').on({
         click: contextMenuSub.clickHandler

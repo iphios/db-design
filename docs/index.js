@@ -8,12 +8,28 @@
       const tfoot = [];
 
       thead.push(`
-        <tr class="caption ${data.color === '#dadada' ? '' : 'colored'}" style="background-color: ${data.color};">
+        <tr class="caption ${data.color === '#dadada' ? '' : 'colored'} show" style="background-color: ${data.color};">
           <th class="table-name" colspan="3">
             ${data.name}
           </th>
           <th class="table-ops">
             <img crossorigin="anonymous" src="./table-edit.png" class="edit-table" />
+          </th>
+        </tr>
+        <tr class="field-form">
+          <th colspan="4">
+            <form>
+              <div class="field">
+                <label>Table Name</label>
+                <input type="text" name="name" />
+              </div>
+              <div class="field field-buttons">
+                <span class="link">Cancel</span>
+                <div>
+                  <input type="button" class="table-save" value="Save">
+                </div>
+              </div>
+            </form>
           </th>
         </tr>
       `);
@@ -400,6 +416,29 @@
     }
     static events() {
       return {
+        editTable: function() {
+          const $this = $(this);
+          const tid = $this.closest('table').data('id');
+          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
+          if (tid == -1) {
+            return;
+          }
+
+          $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').val(DbDesign.currentSchemaObj.tables[tidx].name).trigger('focus');
+        },
+        saveTable: function() {
+          const $this = $(this);
+          const tid = $this.closest('table').data('id');
+          const $form = $this.closest('form');
+          const data = $form.serializeObject();
+          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
+          if (tid == -1) {
+            return;
+          }
+
+          DbDesign.currentSchemaObj.tables[tidx].name = data.name;
+          Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+        },
         fieldChanage: function(event) {
           const $this = $(this);
           if ($this.attr('name') === 'default') {
@@ -442,8 +481,8 @@
             Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
             Table.drawLines();
 
-            $form.trigger('reset');
-            $this.closest('tr').removeClass('show').prev().addClass('show');
+            // $form.trigger('reset');
+            // $this.closest('tr').removeClass('show').prev().addClass('show');
           } else {
             data.id = fid;
             const fidx = DbDesign.currentSchemaObj.tables[tidx].columns.findIndex(each => each.id === fid);
@@ -452,8 +491,8 @@
               Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
               Table.drawLines();
 
-              $form.trigger('reset');
-              $this.closest('tr').removeClass('show').prev().addClass('show');
+              // $form.trigger('reset');
+              // $this.closest('tr').removeClass('show').prev().addClass('show');
             }
           }
         },
@@ -977,6 +1016,8 @@
         mousedown: canvasContainer.mousedownHandler,
         mouseup: canvasContainer.mouseupHandler
       })
+      .on('click', 'table thead th.table-ops img', Table.events().editTable)
+      .on('click', 'table .table-save', Table.events().saveTable)
       .on('input', 'table input', Table.events().fieldChanage)
       .on('change', 'table select', Table.events().fieldChanage)
       .on('click', 'tr.add-field-button span', Table.events().addField)

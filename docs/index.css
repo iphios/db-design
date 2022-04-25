@@ -200,6 +200,13 @@ ul.context-menu li label>input[type="radio"] {
   vertical-align: middle;
 }
 
+.entity-table thead tr {
+  display: none;
+}
+.entity-table thead tr.show {
+  display: table-row;
+}
+
 .entity-table tr[data-id] {
   display: none;
 }
@@ -261,26 +268,26 @@ ul.context-menu li label>input[type="radio"] {
   display: table-row;
 }
 
-.entity-table tr.field-form td form {
+.entity-table tr.field-form form {
   margin: 10px 5px;
   width: 250px;
 }
 
-.entity-table tr.field-form td div.field.hide {
+.entity-table tr.field-form div.field.hide {
   display: none;
 }
 
-.entity-table tr.field-form td div.field {
+.entity-table tr.field-form div.field {
   display: flex;
   justify-content: space-between;
   padding: 2.5px;
 }
 
-.entity-table tr.field-form td div.field label {
+.entity-table tr.field-form div.field label {
   padding-left: 10px;
 }
 
-.entity-table tr.field-form td div.field-buttons {
+.entity-table tr.field-form div.field-buttons {
   padding-top: 10px;
 }
 

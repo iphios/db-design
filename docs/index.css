@@ -155,7 +155,6 @@ ul.context-menu li label>input[type="radio"] {
 
 .entity-table {
   position: absolute;
-  z-index: 5;
   font-family: 'source_sans_proregular', sans-serif;
   font-size: 13px;
   background-color: #eee;

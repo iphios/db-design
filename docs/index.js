@@ -203,7 +203,7 @@
                 <select name="ref_column">
                   <option value="" selected></option>
                   ${
-                    DbDesign.currentSchemaObj.tables.filter(each => each.id != id).map(tableData => {
+                    DbDesign.schema.tables.filter(each => each.id != id).map(tableData => {
                       return `
                         <optgroup label="${tableData.name}">
                           ${tableData.columns.map(column => `<option value="${tableData.id},${column.id}">${column.name}</option>`).join('')}
@@ -216,7 +216,7 @@
               <div class="field field-buttons">
                 <span class="link">Cancel</span>
                 <div>
-                  ${button_text.toLowerCase() == 'update' ? '<input type="button" class="delete" value="Delete" />' : ''}
+                  ${button_text.toLowerCase() === 'update' ? '<input type="button" class="delete" value="Delete" />' : ''}
                   <input type="button" class="${button_text.toLowerCase()}" value="${button_text}" />
                 </div>
               </div>
@@ -236,14 +236,14 @@
             ${html}
           </table>
         `);
-        $('.canvas-container').find(`table[data-id="${data.id}"]`).draggable({
+        $('.canvas-container').find(`table[data-id="${data.id}"]`).css('z-index', Table.getHighestZIndex() + 1).draggable({
           handle: 'tr.caption',
           scroll: false,
           opacity: .8,
           stop: function(event, _ui) {
             const $el = $(event.target);
             const id = $el.data('id');
-            const data = DbDesign.currentSchemaObj.tables.find(each => each.id === id);
+            const data = DbDesign.schema.tables.find(each => each.id === id);
             if (data) {
               const cssValue = $el.css(['left', 'top']);
               data.position.left = parseInt(cssValue.left);
@@ -257,18 +257,18 @@
       $(`table[data-id="${data.id}"] tbody`).sortable({
         update: function(_event, _ui) {
           const tid = $(event.target).closest('table').data('id');
-          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
+          const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
           if (tidx) {
             $(`table[data-id="${tid}"] tbody tr[data-id]`).each(function(index, el) {
               const fid = $(el).data('id');
-              const fidx = DbDesign.currentSchemaObj.tables[tidx].columns.findIndex(each => each.id == fid);
+              const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
               if (fidx) {
-                DbDesign.currentSchemaObj.tables[tidx].columns[fidx].position = index + 1;
+                DbDesign.schema.tables[tidx].columns[fidx].position = index + 1;
               }
             });
           }
 
-          Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+          Table.renderHtml(DbDesign.schema.tables[tidx]);
           Table.drawLines();
         }
       });
@@ -278,19 +278,21 @@
       DbDesign.initCanvas(function() {
         const canvas = window.document.getElementById('graph');
         const context = canvas.getContext('2d');
-        context.font = '20px Arial, sans-serif';
-        context.fillStyle = '#888';
-        context.fillText(DbDesign.currentSchemaObj.name, 30, 40);
+        if (DbDesign.schema != null) {
+          context.font = '20px Arial, sans-serif';
+          context.fillStyle = '#888';
+          context.fillText(DbDesign.schema.name, 30, 40);
 
-        DbDesign.currentSchemaObj.tables.forEach(table => {
-          table.columns.forEach(column => {
-            if (column.ref_column.length != 0) {
-              Table.drawLine(
-                ...Table.calcPointstoDrawLine(table.id, column.id, ...column.ref_column.split(','))
-              );
-            }
+          DbDesign.schema.tables.forEach(table => {
+            table.columns.forEach(column => {
+              if (column.ref_column.length != 0) {
+                Table.drawLine(
+                  ...Table.calcPointstoDrawLine(table.id, column.id, ...column.ref_column.split(','))
+                );
+              }
+            });
           });
-        });
+        }
       });
     }
     static calcPointstoDrawLine(source_table, source_column, dest_table, dest_column) {
@@ -339,26 +341,25 @@
       if (buffer < dest.left.left - source.left.left &&  buffer < dest.left.left - source.right.left) {
         output = [source.right.left + gap, source.right.top, dest.left.left - gap, dest.left.top, 'right'];
       } else if (buffer < source.left.left - dest.left.left && buffer < source.left.left - dest.right.left) {
-        debugger;
-        output =  [source.left.left - gap, source.left.top, dest.right.left + gap, dest.right.top, 'left'];
+        output = [source.left.left - gap, source.left.top, dest.right.left + gap, dest.right.top, 'left'];
       } else {
         output = [source.left.left - gap, source.left.top, dest.left.left - gap, dest.left.top, 'special'];
       }
 
-      output.push(DbDesign.currentSchemaObj.tables.find(table => table.id === dest_table).color);
+      output.push(DbDesign.schema.tables.find(table => table.id === dest_table).color);
       return output;
     }
     static drawLine(left1, top1, left4, top4, type, color) {
       let left2, top2 = top1, left3, top3 = top4;
-      left2 = left3 = Math.min(left1, left4) + (Math.abs(left1 - left4) / 2) - (type == 'special' ? 50 + (Math.abs(left1 - left4) / 1.75) : 0);
+      left2 = left3 = Math.min(left1, left4) + (Math.abs(left1 - left4) / 2) - (type === 'special' ? 50 + (Math.abs(left1 - left4) / 1.75) : 0);
       const canvas = window.document.getElementById('graph');
       const context = canvas.getContext('2d');
+      context.fillStyle = context.strokeStyle = color;
 
       context.beginPath();
       context.moveTo(left1, top1);
       if (DbDesign.getCurrentLineType() === 'bezier') {
         context.bezierCurveTo(left2, top2, left3, top3, left4, top4);
-        context.fillStyle = context.strokeStyle = color;
       } else {
         context.lineTo(left2, top2);
         context.lineTo(left3, top3);
@@ -367,12 +368,11 @@
       context.stroke();
 
       context.beginPath();
-      if (type == 'right' || type == 'special') {
-        context.moveTo(left4, top4);
+      context.moveTo(left4, top4);
+      if (type === 'right' || type === 'special') {
         context.lineTo(left4 - 10, top4 - 5);
         context.lineTo(left4 - 10, top4 + 5);
       } else {
-        context.moveTo(left4, top4);
         context.lineTo(left4 + 10, top4 - 5);
         context.lineTo(left4 + 10, top4 + 5);
       }
@@ -419,30 +419,39 @@
         fun($(each));
       });
     }
+    static getHighestZIndex() {
+      return $('table[data-id]').toArray().reduce((preVal, curVal) => {
+        const currentZindex = window.Number($(curVal).css('z-index'));
+        if (preVal < currentZindex) {
+          preVal = currentZindex;
+        }
+        return preVal;
+      }, 0);
+    }
     static events() {
       return {
         editTable: function() {
           const $this = $(this);
           const tid = $this.closest('table').data('id');
-          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
-          if (tid == -1) {
+          const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
+          if (tid === -1) {
             return;
           }
 
-          $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').val(DbDesign.currentSchemaObj.tables[tidx].name).trigger('focus');
+          $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').val(DbDesign.schema.tables[tidx].name).trigger('focus').closest('table').css('z-index', Table.getHighestZIndex() + 1);
         },
         saveTable: function() {
           const $this = $(this);
           const tid = $this.closest('table').data('id');
           const $form = $this.closest('form');
           const data = $form.serializeObject();
-          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
-          if (tid == -1) {
+          const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
+          if (tid === -1) {
             return;
           }
 
-          DbDesign.currentSchemaObj.tables[tidx].name = data.name;
-          Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+          DbDesign.schema.tables[tidx].name = data.name;
+          Table.renderHtml(DbDesign.schema.tables[tidx]);
         },
         fieldChanage: function(event) {
           const $this = $(this);
@@ -460,7 +469,7 @@
         },
         addField: function(event) {
           const $this = $(event.target);
-          $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').trigger('focus');
+          $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').trigger('focus').closest('table').css('z-index', Table.getHighestZIndex() + 1);
           Table.fieldConditionRender(event);
         },
         cancelAddField: function(event) {
@@ -473,27 +482,27 @@
           const fid = $this.closest('tr').prev().data('id');
           const $form = $this.closest('form');
           const data = $form.serializeObject();
-          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
-          if (tid == -1) {
+          const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
+          if (tid === -1) {
             return;
           }
 
-          if (fid == undefined) {
+          if (fid === undefined) {
             data.id = DbDesign.uuid();
 
-            data.position = DbDesign.currentSchemaObj.tables[tidx].columns.length + 1;
-            DbDesign.currentSchemaObj.tables[tidx].columns.push(data);
-            Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+            data.position = DbDesign.schema.tables[tidx].columns.length + 1;
+            DbDesign.schema.tables[tidx].columns.push(data);
+            Table.renderHtml(DbDesign.schema.tables[tidx]);
             Table.drawLines();
 
             // $form.trigger('reset');
             // $this.closest('tr').removeClass('show').prev().addClass('show');
           } else {
             data.id = fid;
-            const fidx = DbDesign.currentSchemaObj.tables[tidx].columns.findIndex(each => each.id === fid);
+            const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
             if (fidx != undefined) {
-              DbDesign.currentSchemaObj.tables[tidx].columns[fidx] = data;
-              Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+              DbDesign.schema.tables[tidx].columns[fidx] = data;
+              Table.renderHtml(DbDesign.schema.tables[tidx]);
               Table.drawLines();
 
               // $form.trigger('reset');
@@ -508,23 +517,23 @@
           $this.closest('tr').prev().remove();
           $this.closest('tr').remove();
 
-          const tidx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === tid);
+          const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
           if (tidx != -1) {
-            const fidx = DbDesign.currentSchemaObj.tables[tidx].columns.findIndex(each => each.id === fid);
+            const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
             if (fidx) {
-              DbDesign.currentSchemaObj.tables[tidx].columns.splice(fidx, 1);
-              Table.renderHtml(DbDesign.currentSchemaObj.tables[tidx]);
+              DbDesign.schema.tables[tidx].columns.splice(fidx, 1);
+              Table.renderHtml(DbDesign.schema.tables[tidx]);
               Table.drawLines();
             }
           }
         },
         editField: function(event) {
           const $this = $(event.target);
-          const tid = $this.closest('table').data('id');
+          const tid = $this.closest('table').css('z-index', Table.getHighestZIndex() + 1).data('id');
           const fid = $this.closest('tr').data('id');
 
           $this.closest('tr').removeClass('show').next().addClass('show').find('[name="name"]').trigger('focus');
-          const fData = DbDesign.currentSchemaObj.tables.find(each => each.id === tid).columns.find(each => each.id == fid);
+          const fData = DbDesign.schema.tables.find(each => each.id === tid).columns.find(each => each.id === fid);
           const $form = $this.closest('tr').next().find('form');
           Object.entries(fData).forEach(([key, value]) => {
             if (['name', 'type', 'size', 'default', 'default_value', 'attributes', 'index', 'index_name', 'ref_column'].includes(key)) {
@@ -569,7 +578,7 @@
     static async saveSchema() {
       const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
       const store = tx.objectStore('schemas');
-      await store.put(DbDesign.currentSchemaObj);
+      await store.put(DbDesign.schema);
       await tx.done;
 
       $.notify('Schema saved', {
@@ -581,11 +590,11 @@
 
       const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
       const store = tx.objectStore('schemas');
-      await store.delete(DbDesign.currentSchemaObj.id);
+      await store.delete(DbDesign.schema.id);
       await tx.done;
 
       DbDesign.initCanvas(function() {
-        DbDesign.currentSchemaObj = null;
+        DbDesign.schema = null;
         $('table[data-id]').remove();
         $('ul.context-menu').removeClass('show');
       });
@@ -632,17 +641,17 @@
             },
             columns: []
           };
-          DbDesign.currentSchemaObj.tables.push(obj);
+          DbDesign.schema.tables.push(obj);
           Table.renderHtml(obj);
           Table.drawLines();
         }
       }, 0);
     }
     static deleteTable(id) {
-      const idx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === id);
+      const idx = DbDesign.schema.tables.findIndex(each => each.id === id);
       if (idx !== -1) {
         $(`table[data-id="${id}"]`).remove();
-        DbDesign.currentSchemaObj.tables.splice(idx, 1);
+        DbDesign.schema.tables.splice(idx, 1);
       }
     }
     static genImage() {
@@ -651,16 +660,19 @@
 
       const newImage = new Image();
       newImage.addEventListener('load', async (event) => {
-        const maxPoint = DbDesign.currentSchemaObj.tables.reduce((preVal, curVal) => {
+        const maxPoint = DbDesign.schema.tables.reduce((preVal, curVal) => {
           const $el = $(`table[data-id="${curVal.id}"]`);
+
           const curPoint = {
             x: curVal.position.left + $el.width(),
             y: curVal.position.top + $el.height()
           };
-          if (preVal.x < curPoint.x || preVal.y < curPoint.y) {
+          if (preVal.x < curPoint.x) {
             preVal.x = Math.ceil(curPoint.x / event.target.width) * event.target.width;
-            preVal.y = Math.ceil(curPoint.y / event.target.height) * event.target.height;
             preVal.x += 1;
+          }
+          if (preVal.y < curPoint.y) {
+            preVal.y = Math.ceil(curPoint.y / event.target.height) * event.target.height;
             preVal.y += 1;
           }
 
@@ -675,39 +687,96 @@
         const imgContext = imgCanvas.getContext('2d');
         imgContext.fillStyle = '#fff';
         imgContext.fillRect(0, 0, imgCanvas.width, imgCanvas.height);
-        imgContext.drawImage(graphCanvas, 0, 0);
+        imgContext.drawImage(graphCanvas, 0, 0, graphCanvas.width, graphCanvas.height);
 
+        DbDesign.schema.tables.forEach(table => {
+          const $el = $(`table[data-id="${table.id}"]`);
 
-        // imgContext.font = "400 16px Arial, sans-serif",
-        // imgContext.fillStyle = "#888888",
-        // // imgContext.drawImage($("#cache-image-bw-logo").get(0), 10, 10),
-        // imgContext.fillText("dbdesigner.net", 49, 31)
+          imgContext.beginPath();
+          imgContext.strokeStyle = '#000';
+          imgContext.fillStyle = '#fff';
+          imgContext.shadowBlur = 5;
+          imgContext.shadowOffsetX = 2;
+          imgContext.shadowOffsetY = 2;
+          imgContext.shadowColor = 'rgba(136, 136, 136, 0.5)';
+          const tableRect = {
+            x: parseInt(table.position.left) + 0.5,
+            y: parseInt(table.position.top) + 0.5,
+            width: parseInt($el.outerWidth()),
+            height: parseInt($el.outerHeight() - $el.find('tfoot').outerHeight())
+          };
+          imgContext.rect(tableRect.x, tableRect.y, tableRect.width, tableRect.height);
+          imgContext.fillRect(tableRect.x, tableRect.y, tableRect.width, tableRect.height);
+          imgContext.stroke();
 
-        // await DbDesign.currentSchemaObj.tables.asyncforEach(async each => {
-          // const canvas = await window.html2canvas(window.document.querySelector(`table[data-id="${each.id}"]`), {
-          //   backgroundColor: null,
-          //   scale: 1
-          // });
-          // imgContext.drawImage(canvas, each.position.left, each.position.top);
-          // const svg = await window.domtoimage.toSvg(window.document.querySelector(`table[data-id="${each.id}"]`));
-          //
-          // // get svg data
-          // var xml = new XMLSerializer().serializeToString(svg);
-          //
-          // // make it base64
-          // var svg64 = btoa(xml);
-          // var b64Start = 'data:image/svg+xml;base64,';
-          //
-          // // prepend a "header"
-          // var image64 = b64Start + svg64;
-          //
-          // // set it as the source of the img element
-          // img.onload = function() {
-          //     // draw the image onto the canvas
-          //     imgContext.drawImage(img, each.position.left, each.position.top);
-          // }
-          // img.src = image64;
-        // });
+          imgContext.beginPath();
+          imgContext.strokeStyle = table.color;
+          imgContext.fillStyle = table.color;
+          const headRect = {
+            x: tableRect.x + 1,
+            y: tableRect.y + 1,
+            width: parseInt($el.outerWidth()) - 2,
+            height: parseInt($el.find('thead').outerHeight())
+          };
+          imgContext.rect(headRect.x, headRect.y, headRect.width, headRect.height);
+          imgContext.fillRect(headRect.x, headRect.y, headRect.width, headRect.height);
+          imgContext.stroke();
+          headRect.height += 1;
+
+          imgContext.beginPath();
+          imgContext.strokeStyle = '#000';
+          imgContext.moveTo(tableRect.x, tableRect.y + headRect.height);
+          imgContext.lineTo(tableRect.x + tableRect.width, tableRect.y + headRect.height);
+          imgContext.stroke();
+
+          imgContext.font = 'bold 13px Arial, sans-serif';
+          imgContext.fillStyle = table.color === '#dadada' ? '#000' : '#fff';
+          imgContext.fillText(table.name, tableRect.x + 2.5, tableRect.y + 15);
+
+          table.columns.forEach((column, index, array) => {
+            const $column = $el.find(`[data-id=${column.id}]`);
+
+            if (index + 1 != array.length) {
+              imgContext.beginPath();
+              imgContext.strokeStyle = '#000';
+              imgContext.moveTo(
+                tableRect.x,
+                tableRect.y + headRect.height + ($column.outerHeight() * (index + 1))
+              );
+              imgContext.lineTo(
+                tableRect.x + tableRect.width,
+                tableRect.y + headRect.height + ($column.outerHeight() * (index + 1))
+              );
+              imgContext.stroke();
+            }
+
+            $column.find('td.img img').toArray().forEach((img, index1) => {
+              imgContext.drawImage(
+                img,
+                parseInt(tableRect.x + (20 * index1) + 5),
+                parseInt(tableRect.y + headRect.height + ($column.outerHeight() * index) + 4),
+                16,
+                16
+              );
+            });
+
+            imgContext.font = '400 12px Arial, sans-serif';
+            imgContext.fillStyle = '#000';
+            imgContext.fillText(
+              column.name,
+              tableRect.x + 60,
+              tableRect.y + headRect.height + ($column.outerHeight() * index) + 15
+            );
+
+            imgContext.font = '400 12px Arial, sans-serif';
+            imgContext.fillStyle = '#000';
+            imgContext.fillText(
+              `${column.type}${column.size.length ? `(${column.size})` : ''}`,
+              tableRect.x + 125,
+              tableRect.y + headRect.height + ($column.outerHeight() * index) + 15
+            );
+          });
+        });
 
         const img = new Image();
         img.src = imgCanvas.toDataURL('image/png');
@@ -719,7 +788,7 @@
   };
 
   const DbDesign = class {
-    static currentSchemaObj = null;
+    static schema = null;
 
     static fullscreen() {
       return (function() {
@@ -768,7 +837,7 @@
       const obj = await store.get(schemaId)
       await tx.done;
 
-      DbDesign.currentSchemaObj = obj;
+      DbDesign.schema = obj;
       DbDesign.initCanvas(function() {
         const canvas = window.document.getElementById('graph');
         const context = canvas.getContext('2d');
@@ -776,7 +845,7 @@
         context.fillStyle = '#888';
         context.fillText(obj.name, 30, 40);
         $('table[data-id]').remove();
-        DbDesign.currentSchemaObj.tables.forEach(table => {
+        DbDesign.schema.tables.forEach(table => {
           Table.renderHtml(table);
         });
         Table.drawLines();
@@ -833,7 +902,7 @@
           if (isTable) {
             tableId = $el.data('id') || $el.parents('.entity-table').data('id');
           }
-          const isCurrentSchemaPresent = DbDesign.currentSchemaObj !== null;
+          const isCurrentSchemaPresent = DbDesign.schema !== null;
 
           if ($('ul.context-menu.sub').hasClass('show')) {
             $('ul.context-menu.sub').removeClass('show');
@@ -875,8 +944,8 @@
               ` : ''}
             <li class="menu-item-separator">&nbsp;</li>
             <li class="menu-item-action menu-item-action-line-type">
-              <label><input type="radio" name="line_type" value="bezier" ${DbDesign.getCurrentLineType() == 'bezier' ? 'checked' : ''} /><span>Bezier</span></label>
-              <label><input type="radio" name="line_type" value="corners" ${DbDesign.getCurrentLineType() == 'corners' ? 'checked' : ''} /><span>Corners</span></label>
+              <label><input type="radio" name="line_type" value="bezier" ${DbDesign.getCurrentLineType() === 'bezier' ? 'checked' : ''} /><span>Bezier</span></label>
+              <label><input type="radio" name="line_type" value="corners" ${DbDesign.getCurrentLineType() === 'corners' ? 'checked' : ''} /><span>Corners</span></label>
               <span>&nbsp;</span>
             </li>
           `);
@@ -900,7 +969,7 @@
         },
         clickHandler: function(event) {
           const $el = $(event.target);
-          if (!($el.hasClass('context-menu') || $el.parents('ul.context-menu').length == 1)) {
+          if (!($el.hasClass('context-menu') || $el.parents('ul.context-menu').length === 1)) {
             $('ul.context-menu').removeClass('show');
           }
         },
@@ -909,14 +978,16 @@
           return function(event) {
             if (event.repeat) return;
             keyMap[event.key] = event.type === 'keydown';
-            if (keyMap['Escape'] == true) {
+            if (keyMap['Escape'] === true) {
               keyMap = {};
               if ($('ul.context-menu').hasClass('show')) {
                 $('ul.context-menu').removeClass('show');
               }
-            } else if (keyMap['Alt'] == true && (keyMap['s'] == true || keyMap['S'] == true)) {
+            } else if (keyMap['Shift'] === true && (keyMap['s'] === true || keyMap['S'] === true)) {
               keyMap = {};
-              Controller.saveSchema();
+              if (DbDesign.schema != null) {
+                Controller.saveSchema();
+              }
             }
           };
         }
@@ -945,7 +1016,7 @@
           }
         },
         mousedownHandler: function(event) {
-          if (event.target.id == 'graph') {
+          if (event.target.id === 'graph') {
             canvasContainer.isMouseDown = true;
             canvasContainer.left = event.pageX;
             canvasContainer.top = event.pageY;
@@ -980,7 +1051,7 @@
             );
           } else if (value === 'delete_schema') {
             Controller.deleteSchema();
-          } else if (value == 'full_screen') {
+          } else if (value === 'full_screen') {
             Controller.fullScreen();
           } else if (value === 'gen_image') {
             Controller.genImage();
@@ -998,9 +1069,9 @@
           $(`table[data-id="${id}"]`)
             .find('tr.caption')[color === '#dadada' ? 'removeClass' : 'addClass']('colored')
             .css('background-color', color);
-          const idx = DbDesign.currentSchemaObj.tables.findIndex(each => each.id === id);
+          const idx = DbDesign.schema.tables.findIndex(each => each.id === id);
           if (idx !== -1) {
-            DbDesign.currentSchemaObj.tables[idx].color = color;
+            DbDesign.schema.tables[idx].color = color;
             Table.drawLines();
           }
           $('ul.context-menu.main').removeClass('show');
@@ -1108,8 +1179,8 @@
 
         // checkbox if checked serializeArray will give value as 'on' if not checked it wont give entry
         $(this).find('input[type=checkbox]').get().forEach(function(e) {
-          const index = a.findIndex(each => each.name == e.name);
-          if (index == -1) {
+          const index = a.findIndex(each => each.name === e.name);
+          if (index === -1) {
             a.push({
               name: e.name,
               value: e.checked

@@ -681,6 +681,13 @@
           x: 0,
           y: 0
         });
+        if (maxPoint.x + maxPoint.y == 0) {
+          $.notify('schema is empty', {
+            globalPosition: 'top center',
+            className: 'error'
+          });
+          return;
+        }
 
         imgCanvas.width = maxPoint.x;
         imgCanvas.height = maxPoint.y;

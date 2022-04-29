@@ -568,7 +568,7 @@
             tables: [],
             created_at: time,
             updated_at: time
-          })
+          });
           await tx.done;
 
           DbDesign.loadSchema(schemaId);
@@ -792,6 +792,20 @@
         win.document.write(img.outerHTML);
       });
       newImage.src = 'https://raw.githubusercontent.com/sai5171/db-design/main/docs/graph.png';
+    }
+    static importSchema() {
+      setTimeout(async function() {
+        const schemaData = window.prompt('Please enter schema');
+        if (schemaData) {
+          const data = JSON.parse(schemaData);
+          const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
+          const store = tx.objectStore('schemas');
+          await store.put(data);
+          await tx.done;
+
+          DbDesign.loadSchema(data.id);
+        }
+      }, 0);
     }
   };
 
@@ -1040,7 +1054,7 @@
           const $this = $(this);
           const $ul = $this.parent();
           const value = $this.data('value');
-          if (['new_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_image'].includes(value)) {
+          if (['new_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_image', 'import_schema'].includes(value)) {
             $('ul.context-menu').removeClass('show');
           }
           if (value === 'new_table') {
@@ -1064,6 +1078,8 @@
             Controller.fullScreen();
           } else if (value === 'gen_image') {
             Controller.genImage();
+          } else if (value === 'import_schema') {
+            Controller.importSchema();
           } else if (value === 'export_schema') {
             Controller.loadSchema(
               $ul.data('left') + $ul.outerWidth(),

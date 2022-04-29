@@ -578,6 +578,7 @@
     static async saveSchema() {
       const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
       const store = tx.objectStore('schemas');
+      DbDesign.schema.updated_at = new Date().getTime();
       await store.put(DbDesign.schema);
       await tx.done;
 

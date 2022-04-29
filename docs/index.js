@@ -600,9 +600,9 @@
         $('ul.context-menu').removeClass('show');
       });
     }
-    static async loadSchema(left, top, height) {
+    static async loadSchema(left, top, height, action) {
       const schemas = await DbDesign.getAllSchemas();
-      $('ul.context-menu.sub').html(
+      $('ul.context-menu.sub').data('action', action).html(
         schemas.map(each => {
           return `
             <li class="menu-item" data-id="${each.id}">${each.name}</li>
@@ -925,7 +925,7 @@
             ${!isTable ? '<li class="menu-item" data-value="new_schema">New Schema</li>' : ''}
             ${!isTable && (await DbDesign.getAllSchemaKeys()).length !== 0 ? '<li class="menu-item" data-value="load_schema">Load Schema</li>' : ''}
             ${!isTable ? '<li class="menu-item" data-value="import_schema">Import Schema</li>' : ''}
-            ${!isTable && isCurrentSchemaPresent ? '<li class="menu-item" data-value="export_schema">Export Schema</li>' : ''}
+            ${!isTable && (await DbDesign.getAllSchemaKeys()).length !== 0 ? '<li class="menu-item" data-value="export_schema">Export Schema</li>' : ''}
             ${isTable ? `
               <li class="menu-item-separator">&nbsp;</li>
               <li class="menu-item-action menu-item-action-color">
@@ -1055,7 +1055,8 @@
             Controller.loadSchema(
               $ul.data('left') + $ul.outerWidth(),
               $ul.data('top') + $this.prevAll().toArray().reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), parseInt($ul.css('border-top-width'))),
-              $this.outerHeight()
+              $this.outerHeight(),
+              value
             );
           } else if (value === 'delete_schema') {
             Controller.deleteSchema();
@@ -1063,6 +1064,13 @@
             Controller.fullScreen();
           } else if (value === 'gen_image') {
             Controller.genImage();
+          } else if (value === 'export_schema') {
+            Controller.loadSchema(
+              $ul.data('left') + $ul.outerWidth(),
+              $ul.data('top') + $this.prevAll().toArray().reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), parseInt($ul.css('border-top-width'))),
+              $this.outerHeight(),
+              value
+            );
           }
         },
         lineTypeHandler: function() {
@@ -1086,11 +1094,33 @@
         }
       };
       const contextMenuSub = {
-        clickHandler: function() {
+        clickHandler: async function() {
           const $el = $(this);
           const id = $el.data('id');
-          DbDesign.loadSchema(id);
-          $('ul.context-menu').removeClass('show');
+          const action = $el.parent().data('action');
+          if (action == 'load_schema') {
+            DbDesign.loadSchema(id);
+            $('ul.context-menu').removeClass('show');
+          } else if (action == 'export_schema') {
+            const tx = window.idb.dbdesign.transaction(['schemas'], 'readonly');
+            const store = tx.objectStore('schemas');
+            const obj = await store.get(id);
+            await tx.done;
+
+            let file = new Blob([JSON.stringify(obj, null, 2)], {
+              type: 'application/json'
+            });
+            const a = document.createElement('a'),
+              url = URL.createObjectURL(file);
+            a.href = url;
+            a.download = `${obj.name}-${obj.id}.json`;
+            window.document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+              window.document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            }, 0);
+          }
         }
       }
       window.addEventListener('resize', windowEvent.resizeHandler);

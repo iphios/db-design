@@ -575,6 +575,21 @@
         }
       }, 0);
     }
+    static editSchema() {
+      setTimeout(async function() {
+        const name = window.prompt('Please enter new name for current schema');
+        if (name) {
+          const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
+          const store = tx.objectStore('schemas');
+          const data = await store.get(DbDesign.schema.id);
+          data.name = name;
+          await store.put(data);
+          await tx.done;
+
+          DbDesign.loadSchema(DbDesign.schema.id);
+        }
+      }, 0);
+    }
     static async saveSchema() {
       const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
       const store = tx.objectStore('schemas');
@@ -1040,6 +1055,7 @@
             ${isTable ? `<li class="menu-item" data-value="clone_table">Clone Table</li>` : ''}
             ${!isTable && isCurrentSchemaPresent ? `
               <li class="menu-item" data-value="new_table">New Table</li>
+              <li class="menu-item" data-value="edit_schema">Edit Schema</li>
               <li class="menu-item" data-value="save_schema">Save Schema</li>
               <li class="menu-item" data-value="delete_schema">Delete Schema</li>
               ` : ''}
@@ -1163,7 +1179,7 @@
           const $this = $(this);
           const $ul = $this.parent();
           const value = $this.data('value');
-          if (['new_table', 'clone_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_sql', 'gen_image', 'import_schema'].includes(value)) {
+          if (['new_table', 'clone_table', 'delete_table', 'new_schema', 'edit_schema', 'save_schema', 'full_screen', 'gen_sql', 'gen_image', 'import_schema'].includes(value)) {
             $('ul.context-menu').removeClass('show');
           }
           if (value === 'new_table') {
@@ -1174,6 +1190,8 @@
             Controller.deleteTable($ul.data('id'));
           } else if (value === 'new_schema') {
             Controller.newSchema();
+          } else if (value === 'edit_schema') {
+            Controller.editSchema();
           } else if (value === 'save_schema') {
             Controller.saveSchema();
           } else if (value === 'load_schema') {

@@ -648,6 +648,25 @@
         }
       }, 0);
     }
+    static cloneTable(id) {
+      const data = DbDesign.schema.tables.find(each => each.id === id);
+      if (data !== undefined) {
+        const id = DbDesign.uuid();
+        const newData = {
+          id: id,
+          name: data.name,
+          color: data.color,
+          position: {
+            left: data.position.left + 100,
+            top: data.position.top + 100
+          },
+          columns: [...data.columns]
+        };
+        DbDesign.schema.tables.push(newData);
+        Table.renderHtml(newData);
+        Table.drawLines();
+      }
+    }
     static deleteTable(id) {
       const idx = DbDesign.schema.tables.findIndex(each => each.id === id);
       if (idx !== -1) {
@@ -807,6 +826,9 @@
         }
       }, 0);
     }
+    static generateSql() {
+      debugger;
+    }
   };
 
   const DbDesign = class {
@@ -931,6 +953,7 @@
           }
           $('ul.context-menu.main').html(`
             ${isTable ? `<li class="menu-item" data-value="delete_table">Delete Table</li>` : ''}
+            ${isTable ? `<li class="menu-item" data-value="clone_table">Clone Table</li>` : ''}
             ${!isTable && isCurrentSchemaPresent ? `
               <li class="menu-item" data-value="new_table">New Table</li>
               <li class="menu-item" data-value="save_schema">Save Schema</li>
@@ -1054,11 +1077,13 @@
           const $this = $(this);
           const $ul = $this.parent();
           const value = $this.data('value');
-          if (['new_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_image', 'import_schema'].includes(value)) {
+          if (['new_table', 'clone_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_image', 'import_schema'].includes(value)) {
             $('ul.context-menu').removeClass('show');
           }
           if (value === 'new_table') {
             Controller.newTable($ul.data('left'), $ul.data('top'));
+          } else if (value === 'clone_table') {
+            Controller.cloneTable($ul.data('id'));
           } else if (value === 'delete_table') {
             Controller.deleteTable($ul.data('id'));
           } else if (value === 'new_schema') {
@@ -1087,6 +1112,8 @@
               $this.outerHeight(),
               value
             );
+          } else if (value === 'gen_sql') {
+            Controller.generateSql();
           }
         },
         lineTypeHandler: function() {

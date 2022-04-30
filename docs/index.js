@@ -151,8 +151,8 @@
               <div class="field">
                 <label>Default</label>
                 <select name="default">
-                  <option value="NONE" selected>None </option>
-                  <option value="USER_DEFINED">As defined: </option>
+                  <option value="NONE" selected>None</option>
+                  <option value="USER_DEFINED">As defined:</option>
                   <option value="NULL">NULL</option>
                   <option value="CURRENT_TIMESTAMP">CURRENT_TIMESTAMP</option>
                 </select>
@@ -203,7 +203,7 @@
                 <select name="ref_column">
                   <option value="" selected></option>
                   ${
-                    DbDesign.schema.tables.filter(each => each.id != id).map(tableData => {
+                    DbDesign.schema.tables.filter(each => each.id !== id).map(tableData => {
                       return `
                         <optgroup label="${tableData.name}">
                           ${tableData.columns.map(column => `<option value="${tableData.id},${column.id}">${column.name}</option>`).join('')}
@@ -258,11 +258,11 @@
         update: function(_event, _ui) {
           const tid = $(event.target).closest('table').data('id');
           const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
-          if (tidx) {
+          if (tidx !== -1) {
             $(`table[data-id="${tid}"] tbody tr[data-id]`).each(function(index, el) {
               const fid = $(el).data('id');
               const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
-              if (fidx) {
+              if (fidx !== -1) {
                 DbDesign.schema.tables[tidx].columns[fidx].position = index + 1;
               }
             });
@@ -278,14 +278,14 @@
       DbDesign.initCanvas(function() {
         const canvas = window.document.getElementById('graph');
         const context = canvas.getContext('2d');
-        if (DbDesign.schema != null) {
+        if (DbDesign.schema !== null) {
           context.font = '20px Arial, sans-serif';
           context.fillStyle = '#888';
           context.fillText(DbDesign.schema.name, 30, 40);
 
           DbDesign.schema.tables.forEach(table => {
             table.columns.forEach(column => {
-              if (column.ref_column.length != 0) {
+              if (column.ref_column.length !== 0) {
                 Table.drawLine(
                   ...Table.calcPointstoDrawLine(table.id, column.id, ...column.ref_column.split(','))
                 );
@@ -307,14 +307,14 @@
           top: parseInt($source_table.css('top'))
           + $source_table.find('thead').outerHeight()
           + ($source_column.outerHeight() / 2)
-          + $source_column.prevAll().toArray().filter(each => $(each).css('display') != 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
+          + $source_column.prevAll().toArray().filter(each => $(each).css('display') !== 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
         },
         right: {
           left: parseInt($source_table.css('left')) + $source_table.outerWidth(),
           top: parseInt($source_table.css('top'))
           + $source_table.find('thead').outerHeight()
           + ($source_column.outerHeight() / 2)
-          + $source_column.prevAll().toArray().filter(each => $(each).css('display') != 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
+          + $source_column.prevAll().toArray().filter(each => $(each).css('display') !== 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
         }
       };
       const dest = {
@@ -323,14 +323,14 @@
           top: parseInt($dest_table.css('top'))
           + $dest_table.find('thead').outerHeight()
           + ($dest_column.outerHeight() / 2)
-          + $dest_column.prevAll().toArray().filter(each => $(each).css('display') != 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
+          + $dest_column.prevAll().toArray().filter(each => $(each).css('display') !== 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
         },
         right: {
           left: parseInt($dest_table.css('left')) + $dest_table.outerWidth(),
           top: parseInt($dest_table.css('top'))
           + $dest_table.find('thead').outerHeight()
           + ($dest_column.outerHeight() / 2)
-          + $dest_column.prevAll().toArray().filter(each => $(each).css('display') != 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
+          + $dest_column.prevAll().toArray().filter(each => $(each).css('display') !== 'none').reduce((preVal, curVal) => preVal + $(curVal).outerHeight(), 0)
         }
       };
 
@@ -402,7 +402,7 @@
           if ($form.find('select[name="index"]').val() === 'primary_0') {
             $form.find('[name="index_name"]').val('PRIMARY').attr('disabled', true);
           } else {
-            $form.find('[name="index_name"]').val('').attr('disabled', false);
+            $form.find('[name="index_name"]').attr('disabled', false);
           }
         }
 
@@ -465,6 +465,12 @@
               $this.closest('form').find('[name="default"]').val('NONE');
             }
           }
+          if ($this.attr('index') !== 'PRIMARY') {
+            const $el = $this.closest('form').find('[name="index_name"]');
+            if ($el.val() === 'PRIMARY') {
+              $el.val('');
+            }
+          }
           Table.fieldConditionRender(event)
         },
         addField: function(event) {
@@ -494,19 +500,13 @@
             DbDesign.schema.tables[tidx].columns.push(data);
             Table.renderHtml(DbDesign.schema.tables[tidx]);
             Table.drawLines();
-
-            // $form.trigger('reset');
-            // $this.closest('tr').removeClass('show').prev().addClass('show');
           } else {
             data.id = fid;
             const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
-            if (fidx != undefined) {
+            if (fidx !== -1) {
               DbDesign.schema.tables[tidx].columns[fidx] = data;
               Table.renderHtml(DbDesign.schema.tables[tidx]);
               Table.drawLines();
-
-              // $form.trigger('reset');
-              // $this.closest('tr').removeClass('show').prev().addClass('show');
             }
           }
         },
@@ -518,9 +518,9 @@
           $this.closest('tr').remove();
 
           const tidx = DbDesign.schema.tables.findIndex(each => each.id === tid);
-          if (tidx != -1) {
+          if (tidx !== -1) {
             const fidx = DbDesign.schema.tables[tidx].columns.findIndex(each => each.id === fid);
-            if (fidx) {
+            if (fidx !== -1) {
               DbDesign.schema.tables[tidx].columns.splice(fidx, 1);
               Table.renderHtml(DbDesign.schema.tables[tidx]);
               Table.drawLines();
@@ -672,6 +672,7 @@
       if (idx !== -1) {
         $(`table[data-id="${id}"]`).remove();
         DbDesign.schema.tables.splice(idx, 1);
+        Table.drawLines();
       }
     }
     static genImage() {
@@ -701,7 +702,7 @@
           x: 0,
           y: 0
         });
-        if (maxPoint.x + maxPoint.y == 0) {
+        if (maxPoint.x + maxPoint.y === 0) {
           $.notify('schema is empty', {
             globalPosition: 'top center',
             className: 'error'
@@ -763,7 +764,7 @@
           table.columns.forEach((column, index, array) => {
             const $column = $el.find(`[data-id=${column.id}]`);
 
-            if (index + 1 != array.length) {
+            if (index + 1 !== array.length) {
               imgContext.beginPath();
               imgContext.strokeStyle = '#000';
               imgContext.moveTo(
@@ -827,7 +828,90 @@
       }, 0);
     }
     static generateSql() {
-      debugger;
+
+      const sql = DbDesign.schema.tables
+        // skip tables which as 0 columns
+        .filter(table => table.columns.length)
+        // sort based on foreign key references
+        .sort((table1, table2) => {
+          const bool = table1.columns.some(column => column.ref_column.split(',')[0] === table2.id);
+          return bool ? 1 : (table1.updated_at < table2.updated_at ? -1 : 1);
+        }).map(table => {
+
+          // column creation
+          const sql_columns = table.columns.map(column => {
+            const sql_column = [];
+            sql_column.push(`\t`);
+            sql_column.push(`\``);
+            sql_column.push(column.name);
+            sql_column.push(`\``);
+            sql_column.push(` ${column.type}${column.size.length !== 0 ? `(${column.size})`: ''}`);
+            sql_column.push(column.attributes.length !== 0 ? ` ${column.attributes}` : '');
+            sql_column.push(` ${column.null ? 'NULL' : 'NOT NULL'}`);
+            sql_column.push(`${column.default !== 'NONE' ? ` DEFAULT ${column.default === 'USER_DEFINED' ? `'${column.default_value}'` : column.default}` : ''}`);
+            sql_column.push(column.ai === true ? ' AUTO_INCREMENT' : '');
+            return sql_column.join('');
+          });
+
+          // index creation
+
+          // primary key
+          const column = table.columns.find(column => column.index === 'primary_0');
+          if (column !== undefined) {
+            sql_columns.push(`\tPRIMARY KEY (\`${column.name}\`)`);
+          }
+
+          // foreign key
+          table.columns.forEach(column => {
+            if (column.ref_column.length !== 0) {
+              const [ref_table_id, ref_column_id] = column.ref_column.split(',');
+              const ref_table = DbDesign.schema.tables.find(table => table.id === ref_table_id);
+              const ref_column = ref_table.columns.find(column => column.id === ref_column_id);
+              sql_columns.push(`\tFOREIGN KEY (\`${column.name}\`) REFERENCES \`${ref_table.name}\` (\`${ref_column.name}\`)`);
+            }
+          });
+
+          // indexes without name
+          table.columns.filter(column => column.index !== 'none_0' && column.index !== 'primary_0' && column.index_name.length === 0).map(column => {
+            sql_columns.push(`\t${column.index.split('_')[0].toUpperCase()} \`${column.name}\` (\`${column.name}\`)`);
+          });
+
+          // indexes with name
+          Object.entries(
+            table.columns.filter(column => column.index !== 'none_0' && column.index !== 'primary_0' && column.index_name.length !== 0).reduce((preVal, curVal) => {
+              if (!Object.hasOwn(preVal, curVal.index)) {
+                preVal[curVal.index] = {};
+              }
+              if (!Object.hasOwn(preVal[curVal.index], curVal.index_name)) {
+                preVal[curVal.index][curVal.index_name] = [];
+              }
+              preVal[curVal.index][curVal.index_name].push(curVal.name);
+
+              return preVal;
+            }, {})
+          ).forEach(([index_type, obj]) => {
+            index_type = index_type.split('_')[0].toUpperCase();
+            Object.entries(obj).forEach(([index_name, columnNameArray]) => {
+              sql_columns.push(`\t${index_type} \`${index_name}\` (${columnNameArray.map(each => `\`${each}\``).join(',')})`);
+            });
+          });
+
+          return `CREATE TABLE IF NOT EXISTS \`${table.name}\` (\n${sql_columns.join(',\n')}\n);`;
+        });
+
+      let file = new Blob([`${sql.join('\n\n')}\n`], {
+        type: 'application/sql'
+      });
+      const a = document.createElement('a'),
+        url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = `${DbDesign.schema.name}-${DbDesign.schema.id}.sql`;
+      window.document.body.appendChild(a);
+      a.click();
+      setTimeout(function() {
+        window.document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
     }
   };
 
@@ -1018,24 +1102,26 @@
             $('ul.context-menu').removeClass('show');
           }
         },
-        keyHandler: function() {
+        keyHandler: (function() {
           let keyMap = {};
           return function(event) {
-            if (event.repeat) return;
             keyMap[event.key] = event.type === 'keydown';
             if (keyMap['Escape'] === true) {
               keyMap = {};
               if ($('ul.context-menu').hasClass('show')) {
                 $('ul.context-menu').removeClass('show');
               }
+              if ($('.field-form').hasClass('show')) {
+                $('.field-form.show .link').trigger('click');
+              }
             } else if (keyMap['Shift'] === true && (keyMap['s'] === true || keyMap['S'] === true)) {
               keyMap = {};
-              if (DbDesign.schema != null) {
+              if (DbDesign.schema !== null) {
                 Controller.saveSchema();
               }
             }
-          };
-        }
+          }
+        })()
       };
       const canvasContainer = {
         clicked: false,
@@ -1077,7 +1163,7 @@
           const $this = $(this);
           const $ul = $this.parent();
           const value = $this.data('value');
-          if (['new_table', 'clone_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_image', 'import_schema'].includes(value)) {
+          if (['new_table', 'clone_table', 'delete_table', 'new_schema', 'save_schema', 'full_screen', 'gen_sql', 'gen_image', 'import_schema'].includes(value)) {
             $('ul.context-menu').removeClass('show');
           }
           if (value === 'new_table') {
@@ -1101,6 +1187,8 @@
             Controller.deleteSchema();
           } else if (value === 'full_screen') {
             Controller.fullScreen();
+          } else if (value === 'gen_sql') {
+            Controller.generateSql();
           } else if (value === 'gen_image') {
             Controller.genImage();
           } else if (value === 'import_schema') {
@@ -1112,8 +1200,6 @@
               $this.outerHeight(),
               value
             );
-          } else if (value === 'gen_sql') {
-            Controller.generateSql();
           }
         },
         lineTypeHandler: function() {
@@ -1141,10 +1227,10 @@
           const $el = $(this);
           const id = $el.data('id');
           const action = $el.parent().data('action');
-          if (action == 'load_schema') {
+          if (action === 'load_schema') {
             DbDesign.loadSchema(id);
             $('ul.context-menu').removeClass('show');
-          } else if (action == 'export_schema') {
+          } else if (action === 'export_schema') {
             const tx = window.idb.dbdesign.transaction(['schemas'], 'readonly');
             const store = tx.objectStore('schemas');
             const obj = await store.get(id);
@@ -1170,8 +1256,8 @@
       $(window.document).on({
         contextmenu: windowDocument.contextmenuHandler,
         click: windowDocument.clickHandler,
-        keyup: windowDocument.keyHandler(),
-        keydown: windowDocument.keyHandler()
+        keyup: windowDocument.keyHandler,
+        keydown: windowDocument.keyHandler
       });
       $('.canvas-container').on({
         mousemove: canvasContainer.mousemoveHandler,
@@ -1283,7 +1369,7 @@
             }
 
             // check if e.value is convertible to number
-            if (obj.hasOwnProperty(e.name)) {
+            if (Object.hasOwn(obj, e.name)) {
               if (!(obj[e.name] instanceof Array)) obj[e.name] = [obj[e.name]];
               obj[e.name].push(e.value);
             } else {

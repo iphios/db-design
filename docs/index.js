@@ -577,7 +577,7 @@
     }
     static editSchema() {
       setTimeout(async function() {
-        const name = window.prompt('Please enter new name for current schema');
+        const name = window.prompt('Please enter new name for current schema', DbDesign.schema.name);
         if (name) {
           const tx = window.idb.dbdesign.transaction(['schemas'], 'readwrite');
           const store = tx.objectStore('schemas');

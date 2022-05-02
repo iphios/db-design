@@ -18,7 +18,7 @@
         </tr>
         <tr class="field-form">
           <th colspan="4">
-            <form>
+            <form action="javascript:void(0)">
               <div class="field">
                 <label>Table Name</label>
                 <input type="text" name="name" />
@@ -72,7 +72,7 @@
       return `
         <tr class="field-form">
           <td colspan="4">
-            <form>
+            <form action="javascript:void(0)">
               <div class="field">
                 <label>Name</label>
                 <input type="text" name="name" />

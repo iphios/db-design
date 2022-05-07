@@ -471,6 +471,9 @@
               $el.val('');
             }
           }
+          if ($this.attr('name') === 'fk' && $this.prop('checked') === false) {
+            $this.closest('form').find('[name="ref_column"]').val('');
+          }
           Table.fieldConditionRender(event)
         },
         addField: function(event) {

@@ -779,6 +779,8 @@
           imgContext.fillStyle = table.color === '#dadada' ? '#000' : '#fff';
           imgContext.fillText(table.name, tableRect.x + 2.5, tableRect.y + 15);
 
+          const defaultColumnHeight = 23;
+
           table.columns.forEach((column, index, array) => {
             const $column = $el.find(`[data-id=${column.id}]`);
 
@@ -787,11 +789,11 @@
               imgContext.strokeStyle = '#000';
               imgContext.moveTo(
                 tableRect.x,
-                tableRect.y + headRect.height + ($column.outerHeight() * (index + 1))
+                tableRect.y + headRect.height + (defaultColumnHeight * (index + 1))
               );
               imgContext.lineTo(
                 tableRect.x + tableRect.width,
-                tableRect.y + headRect.height + ($column.outerHeight() * (index + 1))
+                tableRect.y + headRect.height + (defaultColumnHeight * (index + 1))
               );
               imgContext.stroke();
             }
@@ -800,7 +802,7 @@
               imgContext.drawImage(
                 img,
                 parseInt(tableRect.x + (20 * index1) + 5),
-                parseInt(tableRect.y + headRect.height + ($column.outerHeight() * index) + 4),
+                parseInt(tableRect.y + headRect.height + (defaultColumnHeight * index) + 4),
                 16,
                 16
               );
@@ -810,16 +812,16 @@
             imgContext.fillStyle = '#000';
             imgContext.fillText(
               column.name,
-              tableRect.x + 60,
-              tableRect.y + headRect.height + ($column.outerHeight() * index) + 15
+              tableRect.x + 50,
+              tableRect.y + headRect.height + (defaultColumnHeight * index) + 15
             );
 
             imgContext.font = '400 12px Arial, sans-serif';
             imgContext.fillStyle = '#000';
             imgContext.fillText(
               `${column.type}${column.size.length ? `(${column.size})` : ''}`,
-              tableRect.x + 125,
-              tableRect.y + headRect.height + ($column.outerHeight() * index) + 15
+              tableRect.x + 150,
+              tableRect.y + headRect.height + (defaultColumnHeight * index) + 15
             );
           });
         });
